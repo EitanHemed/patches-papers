@@ -1,0 +1,7 @@
+patch_length [F(1, 73) = 1.18, p = 0.280, Partial Eta-Sq. = 0.02]
+prior [F(1, 73) = 194.03, p = 0.001, Partial Eta-Sq. = 0.73]
+patch_length:prior [F(1, 73) = 1.58, p = 0.212, Partial Eta-Sq. = 0.02]
+context [F(3, 190) = 0.96, p = 0.404, Partial Eta-Sq. = 0.01]
+patch_length:context [F(3, 190) = 9.07, p = 0.001, Partial Eta-Sq. = 0.11]
+prior:context [F(3, 207) = 30.37, p = 0.001, Partial Eta-Sq. = 0.29]
+patch_length:prior:context [F(3, 207) = 5.05, p = 0.003, Partial Eta-Sq. = 0.07]]

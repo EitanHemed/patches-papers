@@ -1,0 +1,5 @@
+/Code/dist/
+/Code/*.pyc
+/Code/build/
+.idea/*
+/Code/po_utils/po_utils.egg-info

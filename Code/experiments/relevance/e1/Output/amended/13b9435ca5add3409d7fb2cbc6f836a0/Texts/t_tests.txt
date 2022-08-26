@@ -1,0 +1,32 @@
+FOR CYCLE DURATION 5: 
+FOR PRIOR VALUE False: 
+CONTROL FEEDBACK a non-significant mean change [3.90 MS (16.88); t(39) = 1.44, p = 0.157, Cohen's d = 0.23, (-0.09, 0.54), BF1:0 0.4437]
+NEGLIGIBLE OUTCOME a non-significant mean change [2.35 MS (13.01); t(33) = 1.04, p = 0.306, Cohen's d = 0.18, (-0.16, 0.52), BF1:0 0.3018]
+SUBSTANTIAL OUTCOME a non-significant mean change [0.23 MS (20.94); t(32) = 0.06, p = 0.951, Cohen's d = 0.01, (-0.33, 0.35), BF1:0 0.1866]
+
+
+FOR PRIOR VALUE True: 
+CONTROL FEEDBACK a significant mean decrease [-11.83 MS (16.55); t(39) = -4.46, p < 0.001, Cohen's d = -0.71, (-1.05, -0.36), BF1:0 700.5586]
+NEGLIGIBLE OUTCOME a significant mean decrease [-10.67 MS (17.21); t(33) = -3.56, p < 0.001, Cohen's d = -0.61, (-0.97, -0.24), BF1:0 56.7973]
+SUBSTANTIAL OUTCOME a significant mean decrease [-13.36 MS (21.62); t(32) = -3.49, p < 0.001, Cohen's d = -0.61, (-0.98, -0.23), BF1:0 47.5276]
+
+
+
+
+
+FOR CYCLE DURATION 10: 
+FOR PRIOR VALUE False: 
+CONTROL FEEDBACK a non-significant mean change [1.78 MS (24.75); t(35) = 0.43, p = 0.673, Cohen's d = 0.07, (-0.26, 0.40), BF1:0 0.1948]
+NEGLIGIBLE OUTCOME a non-significant mean change [5.57 MS (20.78); t(30) = 1.47, p = 0.152, Cohen's d = 0.26, (-0.10, 0.62), BF1:0 0.5050]
+SUBSTANTIAL OUTCOME a non-significant mean change [6.21 MS (22.95); t(33) = 1.55, p = 0.130, Cohen's d = 0.27, (-0.08, 0.61), BF1:0 0.5461]
+
+
+FOR PRIOR VALUE True: 
+CONTROL FEEDBACK a significant mean decrease [-10.52 MS (18.72); t(35) = -3.32, p = 0.001, Cohen's d = -0.55, (-0.90, -0.20), BF1:0 32.8155]
+NEGLIGIBLE OUTCOME a non-significant mean change [3.56 MS (14.30); t(30) = 1.36, p = 0.909, Cohen's d = 0.25, (-0.11, 0.60), BF1:0 0.0883]
+SUBSTANTIAL OUTCOME a significant mean decrease [-7.52 MS (23.08); t(33) = -1.87, p = 0.035, Cohen's d = -0.32, (-0.66, 0.03), BF1:0 1.6740]
+
+
+
+
+
