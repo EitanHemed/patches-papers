@@ -696,7 +696,8 @@ def plot_sequential_bayes(raw_data: pd.DataFrame, test_data: typing.Dict,
         ax.set(
             # ylim=[0.01, 1e6],
             xlim=[0, max_group_size],
-            xticklabels=[])
+            xticklabels=[],
+        )
 
     axs = axs.reshape((-1, 2))
 
@@ -707,8 +708,10 @@ def plot_sequential_bayes(raw_data: pd.DataFrame, test_data: typing.Dict,
                  ) for i, ax in zip(cn.CYCLE_LENGTH_LEVELS,
                                     axs[:, 1].flat)]
 
-    axs[-1, 0].set(xticks=range(0, max_group_size, 5),
-                   xticklabels=range(0, max_group_size, 5))
+    _tick_distances = 5 if max_group_size < 80 else 10
+    axs[-1, 0].set(xticks=range(0, max_group_size, _tick_distances),
+                   xticklabels=range(0, max_group_size, _tick_distances
+                                     ))
     axs[-1, 0].set_xlabel(SEQUETIAL_BAYES_X_LABEL, fontsize=AXIS_LABEL_FONTSIZE)
 
     axs[-1, 0].set_ylabel(SEQUENTIAL_BAYES_Y_AXIS_LABEL,

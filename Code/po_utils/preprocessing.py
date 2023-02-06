@@ -28,6 +28,7 @@ OUTPUT_DATA_FNAME_DYNAMICS_PRE_AGGREGATION = 'pre_aggregation'
 OUTPUT_DATA_FNAME_DYNAMICS_POST_AGGREGATION = 'post_aggregation'
 OUTPUT_DATA_FNAME_DYNAMICS_POST_AGGREGATION_WIDE = 'post_aggregation_wide'
 
+
 def preprocess(method: int) -> pd.DataFrame:
     _load_data = partial(load_data, method=method)
     _clean_data = partial(clean_data, method=method)
@@ -53,7 +54,6 @@ def preprocess(method: int) -> pd.DataFrame:
     return aggregated_dynamics_df
 
 
-
 def save_data_intermediate(df, method, stage, ) -> pd.DataFrame:
     """Save the current data and return it for further processing"""
     df.to_csv(OUTPUT_DATA_CSV_PATH.format(
@@ -62,10 +62,21 @@ def save_data_intermediate(df, method, stage, ) -> pd.DataFrame:
 
 
 def load_data(method) -> pd.DataFrame:
-    return _sort_raw(_relabel_columns(
+    return _mark_distance_from_probes(_sort_raw(_relabel_columns(
         _remove_columns_from_raw_data(_relabel_levels(
             read_raw_pooled_data()),
-            cn.COLUMN_NAME_STUBS_TO_DROP_FROM_RAW_DATA)))
+            cn.COLUMN_NAME_STUBS_TO_DROP_FROM_RAW_DATA))))
+
+
+def _mark_distance_from_probes(df: pd.DataFrame) -> pd.DataFrame:
+    df[cn.TRIALS_SINCE_LAST_PROBED_TRIAL] = df.groupby(
+        [cn.COLUMN_NAME_UID,
+         df[cn.COLUMN_NAME_PROBED_TRIAL].cumsum()]).cumcount().values
+    # Remove data prior to the first probed trial
+    df.loc[
+        df[cn.COLUMN_NAME_TRIAL_NUMBER].le(6), cn.TRIALS_SINCE_LAST_PROBED_TRIAL] = np.nan
+
+    return df
 
 
 def _sort_raw(df: pd.DataFrame) -> pd.DataFrame:
@@ -74,7 +85,7 @@ def _sort_raw(df: pd.DataFrame) -> pd.DataFrame:
         **{cn.COLUMN_NAME_DATE: _interpret_datetime(
             df[cn.COLUMN_NAME_DATE])}).sort_values(cn.COLUMN_NAME_DATE
                                                    ).sort_values(
-            [cn.COLUMN_NAME_UID, cn.COLUMN_NAME_TRIAL_NUMBER])
+        [cn.COLUMN_NAME_UID, cn.COLUMN_NAME_TRIAL_NUMBER])
 
 
 def _interpret_datetime(s: pd.Series) -> pd.Series:
@@ -147,7 +158,6 @@ def _assign_resp_accuracy(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _label_valid_trials(df: pd.DataFrame) -> pd.DataFrame:
-
     acceptable_rt_task_trials = ~df[cn.COLUMN_NAME_PROBED_TRIAL] & (
         df[cn.COLUMN_NAME_RESP_TIME].between(
             cn.TASK_TRIAL_MIN_RT,
@@ -167,16 +177,13 @@ def _label_valid_trials(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _label_feedback_trials(df: pd.DataFrame) -> pd.DataFrame:
-
-
     # Find task trials with a correct response
     valid_task_trials = (~df[cn.COLUMN_NAME_PROBED_TRIAL]) & (
         df[cn.COLUMN_NAME_RESP_ACCURACY].eq(1))
 
     # Label valid trials (potential effect trials) based on the feedback cycle
     #  type they are in
-    # TODO - see if the following solves the 'SettingWithCopy' warning
-    df[cn.COLUMN_NAME_RSP_FEEDBACK] = df[cn.COLUMN_NAME_FEEDBACK_CYCLE].values
+    df.loc[:, cn.COLUMN_NAME_RSP_FEEDBACK] = df[cn.COLUMN_NAME_FEEDBACK_CYCLE].values
     df.loc[~valid_task_trials, cn.COLUMN_NAME_RSP_FEEDBACK] = np.nan
 
     return df
@@ -295,8 +302,6 @@ def _report_preprocessing(df: pd.DataFrame, method: int) -> str:
         print(clause, file=f)
 
 
-
-
 def _extract_poor_performance_participants(df: pd.DataFrame) -> Tuple[int, int]:
     return (*[df.loc[df[col_name] < col_min_value, cn.COLUMN_NAME_UID].nunique()
               for col_name, col_min_value in zip(
@@ -311,7 +316,6 @@ def _extract_poor_performance_participants(df: pd.DataFrame) -> Tuple[int, int]:
 
 
 def _extract_rt_limit_cumulative_percentages(df: pd.DataFrame) -> npt.ArrayLike:
-
     rts = (df[cn.COLUMN_NAME_RESP_TIME]).copy()
 
     low_and_high_rt_boundaries = np.array([
@@ -387,7 +391,8 @@ def _pivot_for_external(df):
     df = df.pivot_table(values=cn.COLUMN_NAME_RESP_TIME,
                         index=[cn.COLUMN_NAME_UID, cn.COLUMN_NAME_CYCLE_LENGTH,
                                cn.COLUMN_NAME_FEEDBACK_TYPE],
-                        columns=[cn.COLUMN_NAME_PRIOR, cn.COLUMN_NAME_CONTEXT]).copy()
+                        columns=[cn.COLUMN_NAME_PRIOR,
+                                 cn.COLUMN_NAME_CONTEXT]).copy()
     df.columns = df.columns.droplevel(0)
     cols = [f'{cn.COLUMN_NAME_PRIOR}_{_p}_{cn.COLUMN_NAME_CONTEXT}_{_c}'
             for _p, _c in (itertools.product([0, 1], [0, 1, 2, 3]))]

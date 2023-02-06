@@ -1,5 +1,9 @@
-/Code/dist/
-*.pyc
-/Code/build/
+**/dist/
+**/build/
+**/*.pyc
 .idea/*
-/Code/po_utils/po_utils.egg-info
+**/*.egg-info
+Code/.pytest_cache
+**/.ipynb_checkpoints/
+**/_test.py
+**/*.ipynb

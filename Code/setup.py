@@ -1,7 +1,13 @@
+import glob
+import os
+import pathlib
+import shutil
+
 import setuptools
 
 with open("../README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
+
 
 setuptools.setup(
     name="po_utils",
@@ -20,9 +26,8 @@ setuptools.setup(
         "License :: OSI Approved :: GPL-3",
         "Operating System :: OS Independent",
     ],
-    package_dir={"": "po_utils"},
-    packages=setuptools.find_packages(where="po_utils"),
+    packages=['po_utils'],
     python_requires="==3.9.12",
     install_requires=['robusta-stats==0.0.4', 'matplotlib', 'scipy',
-                      'seaborn']
+                      'seaborn'],
 )
