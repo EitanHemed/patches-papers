@@ -25,7 +25,7 @@ DYNAMICS_MODEL_CI_IMG_FNAME = f'{OUTPUT_PATH}/group_cis{PLOT_EXTEN}'
 COLORS = ['purple', 'green', 'deepskyblue']
 LEGEND_ENTRY_FONTSIZE = 14
 AXIS_LABEL_FONTSIZE = 16
-FIGURE_FACECOLOR = 'white'
+FIGURE_FACECOLOR = 'none'
 
 # Parameters related to Bayesian sequential analysis plot
 INCONCLUSIVENESS_REGION_LINESTYLE = '--'
@@ -44,7 +44,7 @@ INDIVIDUAL_MEANS_SCATTER_SIZE = 15
 
 PLOT_GROUPER_LEVEL_1 = [cn.COLUMN_NAME_PRIOR, cn.COLUMN_NAME_CYCLE_LENGTH]
 
-DYNAMICS_FIG_SIZE = [[6, 5], [9, 9]]
+DYNAMICS_FIG_SIZE = [[8, 6], [9, 9]]
 DYNAMICS_FIG_ARRAY = [(1, 2), (2, 2)]
 
 # Parameters related to the contrasts plot
@@ -67,16 +67,16 @@ COLUMN_TITLES_DICT = dict(
                    CONTRASTS_PLOT_COLUMN_TITLES_PERTURBED_FEEDBACK_MANIPULATION]))
 
 LARGE_SCATTER_AREA = 100
-SMALL_SCATTER_AREA = 40
+SMALL_SCATTER_AREA = 60
 LARGE_SCATTER_ALPHA = 1
-SMALL_SCATTER_ALPHA = 0.2
+SMALL_SCATTER_ALPHA = 0.4
 
 # This controls the type of plots that will be produced
 CLASSIC_PLOT_MODE = 0
 NOVEL_PLOT_MODE = 1
 NOVEL_PLOT_MODE = 1
 
-CONTRASTS_FIG_SIZE = [[9, 12], [8, 9]]
+CONTRASTS_FIG_SIZE = [[9, 10], [10, 12]]
 CONTRASTS_FIG_ARRAY = [(2, 2), (4, 2)]
 LEGEND_STUB_LABELS = (tuple(cn.CYCLE_LENGTH_LEVELS),
                       tuple(cn.NEW_FEEDBACK_LEVELS))
@@ -234,8 +234,9 @@ def get_figure_and_axes(
             figsize=dynamics_fig_size)
 
         contrasts_fig = plt.figure(constrained_layout=True,
-                                   figsize=contrasts_fig_size)
-        contrasts_subfigs = contrasts_fig.subfigures(2, 1, hspace=0.05, )
+                                   figsize=contrasts_fig_size, facecolor='none')
+        contrasts_subfigs = contrasts_fig.subfigures(2, 1, hspace=0.05,
+                                                     facecolor='none')
 
         subplot_nrows, subplot_ncols = contrasts_fig_array
 
@@ -254,11 +255,11 @@ def get_figure_and_axes(
     else:
 
         fig = plt.figure(constrained_layout=True,
-                         figsize=contrasts_fig_size)
+                         figsize=contrasts_fig_size, facecolor='none')
 
         dynamics_fig, top_contrasts_subfig, bottom_contrasts_subfig = (
             fig.subfigures(3, 1, hspace=0.025, wspace=0,
-                           height_ratios=[0.45, 0.35, 0.3]))
+                           height_ratios=[0.45, 0.35, 0.3], facecolor='none'))
 
         dynamics_axs = dynamics_fig.subplots(
             1, 2, sharey=True, sharex=True,
@@ -643,6 +644,7 @@ def plot_sequential_bayes(raw_data: pd.DataFrame, test_data: typing.Dict,
     for (name, group), (ax_index, ax) in zip(
             raw_data.groupby(axis_grouper), enumerate(axs.flat)):
 
+
         rect = Rectangle(
             (0, LOW_INCONCLUSIVE_LIMIT), max_group_size,
             HIGH_INCONCLUSIVE_LIMIT - LOW_INCONCLUSIVE_LIMIT,
@@ -708,7 +710,7 @@ def plot_sequential_bayes(raw_data: pd.DataFrame, test_data: typing.Dict,
                  ) for i, ax in zip(cn.CYCLE_LENGTH_LEVELS,
                                     axs[:, 1].flat)]
 
-    _tick_distances = 5 if max_group_size < 80 else 10
+    _tick_distances = 10 if max_group_size < 80 else 15
     axs[-1, 0].set(xticks=range(0, max_group_size, _tick_distances),
                    xticklabels=range(0, max_group_size, _tick_distances
                                      ))

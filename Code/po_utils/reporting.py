@@ -127,4 +127,4 @@ def form_t_clause(t_test: rst.groupwise.T2Samples,
     """
     return (
         f'{t_test.report_text(effect_size=True)},'
-        f" BF1:0 {(bayes_t_test.report_table().iloc[0].to_dict()['bf']):.4f}")
+        f" BF1:0 = {(bayes_t_test.report_table().iloc[0].to_dict()['bf']):.4f}")

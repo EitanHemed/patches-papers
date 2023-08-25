@@ -79,12 +79,12 @@ CYCLE_LENGTH_LEVELS = ('5 Trials', '10 Trials')
 CYCLE_LENGTHS = (5, 10)
 PRIOR_LEVELS = (False, True)
 
-DEFAULT_DATE_FORMAT = '%Y_%b_%d_%H%M'
 DATE_FORMAT_1ST_FALLBACK = "%Y-%m-%d_%Hh%M.%S.%f"
 DATE_FORMAT_2ND_FALLBACK = '%Y-%m-%d_%Hh%M.%S'
 
-DATE_FORMATS = (DEFAULT_DATE_FORMAT, DATE_FORMAT_1ST_FALLBACK,
-                DATE_FORMAT_2ND_FALLBACK)
+DATE_FORMATS = ['%Y_%b_%d_%H%M', '%Y-%m-%d_%Hh%M.%S',
+                         '%m/%d/%Y_%Hh%M.%S.%f',
+                         '%m-%d-%Y_%Hh%M.%S.%f', '%m-%d-%Y_%Hh.%S.%f', ]
 
 DYNAMICS_MODEL_COLUMNS_OF_INTEREST = [
     COLUMN_NAME_FEEDBACK_TYPE,

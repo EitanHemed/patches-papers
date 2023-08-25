@@ -1,10 +1,10 @@
 FOR CYCLE DURATION 5: 
 FOR PRIOR VALUE False: 
- a significant mean increase [7.19 MS (20.84); t(36) = 2.07, p = 0.046, Cohen's d = 0.34, (0.01, 0.67), BF1:0 1.1877]
+ a significant mean increase [7.19 MS (20.84); t(36) = 2.07, p = 0.046, Cohen's d = 0.34, (0.01, 0.67), BF1:0 = 1.1877]
 
 
 FOR PRIOR VALUE True: 
- a significant mean decrease [-21.60 MS (24.65); t(36) = -5.26, p < 0.001, Cohen's d = -0.86, (-1.24, -0.48), BF1:0 5783.8983]
+ a significant mean decrease [-21.60 MS (24.65); t(36) = -5.26, p < 0.001, Cohen's d = -0.86, (-1.24, -0.48), BF1:0 = 5783.8983]
 
 
 
@@ -12,11 +12,11 @@ FOR PRIOR VALUE True:
 
 FOR CYCLE DURATION 10: 
 FOR PRIOR VALUE False: 
- a significant mean increase [34.19 MS (32.92); t(37) = 6.32, p < 0.001, Cohen's d = 1.02, (0.63, 1.41), BF1:0 66711.0999]
+ a significant mean increase [34.19 MS (32.92); t(37) = 6.32, p < 0.001, Cohen's d = 1.02, (0.63, 1.41), BF1:0 = 66711.0999]
 
 
 FOR PRIOR VALUE True: 
- a significant mean decrease [-17.24 MS (37.72); t(37) = -2.78, p = 0.004, Cohen's d = -0.45, (-0.78, -0.11), BF1:0 9.4809]
+ a significant mean decrease [-17.24 MS (37.72); t(37) = -2.78, p = 0.004, Cohen's d = -0.45, (-0.78, -0.11), BF1:0 = 9.4809]
 
 
 
