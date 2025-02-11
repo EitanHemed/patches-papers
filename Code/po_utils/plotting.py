@@ -28,7 +28,7 @@ AXIS_LABEL_FONTSIZE = 16
 FIGURE_FACECOLOR = 'none'
 
 # Parameters related to Bayesian sequential analysis plot
-INCONCLUSIVENESS_REGION_LINESTYLE = '--'
+INCONCLUSIVENESS_REGION_LINESTYLE = 'dotted'
 INCONCLUSIVENESS_REGION_LINECOLOR = 'k'
 LOW_INCONCLUSIVE_LIMIT = 1 / 3
 HIGH_INCONCLUSIVE_LIMIT = 3
@@ -47,20 +47,20 @@ PLOT_GROUPER_LEVEL_1 = [cn.COLUMN_NAME_PRIOR, cn.COLUMN_NAME_CYCLE_LENGTH]
 DYNAMICS_FIG_SIZE = [[8, 6], [9, 9]]
 DYNAMICS_FIG_ARRAY = [(1, 2), (2, 2)]
 
-# Parameters related to the contrasts plot
+#    Parameters related to the contrasts plot
 CONTRASTS_PLOT_X_AXIS_TICKS = [[4, 8], [2, 6, 10]]
 
 CONTRASTS_PLOT_SCATTER_DODGE_SIZE = 0.05
 
-CONTRASTS_PLOT_COLUMN_TITLES_NO_FEEDBACK_MANIPULATION = [
-    '$\mathbf{Prior_{0}}$ \n No Feedback on Trial N-1',
-    '$\mathbf{Prior_{1}}$ \n Feedback on Trial N-1'
-]
+CONTRASTS_PLOT_COLUMN_TITLES_NO_FEEDBACK_MANIPULATION = (
+    '$\mathbf{Prior_{1}}$ \n Action-effect on Trial N-1',
+    '$\mathbf{Prior_{0}}$ \n No-effect on Trial N-1'
+)
 
-CONTRASTS_PLOT_COLUMN_TITLES_PERTURBED_FEEDBACK_MANIPULATION = [
-    '$\mathbf{Prior_{0}}$ \n Perturbed Feedback on Trial N-1',
-    '$\mathbf{Prior_{1}}$ \n Unperturbed Feedback on Trial N-1'
-]
+CONTRASTS_PLOT_COLUMN_TITLES_PERTURBED_FEEDBACK_MANIPULATION = (
+    '$\mathbf{Prior_{1}}$ \n Unperturbed Effect on Trial N-1',
+    '$\mathbf{Prior_{0}}$ \n Perturbed Effect on Trial N-1'
+)
 
 COLUMN_TITLES_DICT = dict(
     zip(range(2), [CONTRASTS_PLOT_COLUMN_TITLES_NO_FEEDBACK_MANIPULATION,
@@ -76,27 +76,28 @@ CLASSIC_PLOT_MODE = 0
 NOVEL_PLOT_MODE = 1
 NOVEL_PLOT_MODE = 1
 
-CONTRASTS_FIG_SIZE = [[9, 10], [10, 12]]
-CONTRASTS_FIG_ARRAY = [(2, 2), (4, 2)]
+CONTRASTS_FIG_SIZE = ([9, 12.5], [10, 12])
+CONTRASTS_FIG_ARRAY = ((2, 2), (4, 2))
 LEGEND_STUB_LABELS = (tuple(cn.CYCLE_LENGTH_LEVELS),
                       tuple(cn.NEW_FEEDBACK_LEVELS))
 MULTI_FEEDBACK_TYPE_EXPERIMENT_DYNAMICS_ROW_LABELS = tuple(
     cn.CYCLE_LENGTH_LEVELS)
 
-LEGENDS_TITLE = ['Cycle Duration', '']
-ROW_INDEXER = [cn.COLUMN_NAME_FEEDBACK_TYPE, cn.COLUMN_NAME_CYCLE_LENGTH]
+LEGENDS_TITLE = ('Cycle Duration', '')
+ROW_INDEXER = (cn.COLUMN_NAME_FEEDBACK_TYPE, cn.COLUMN_NAME_CYCLE_LENGTH)
 LINE_INDEXER = ROW_INDEXER[
                ::-1]  # [c.COLUMN_NAME_CYCLE_LENGTH, c.COLUMN_NAME_FEEDBACK_TYPE]
 
 COLUMN_INDEXER = cn.COLUMN_NAME_PRIOR
 
 X_AXIS_TICKS = range(4)
+
 X_AXIS_INDEXER = cn.COLUMN_NAME_CONTEXT
-X_AXIS_TITLE = ('$\mathbf{Context}$ - Sum of feedback\n occurrences'
+X_AXIS_TITLE = ('$\mathbf{Context}$ - Sum of action-effect\n occurrences'
                 ' on trials N-4 through N-2')
 
 Y_AXIS_INDEXER = cn.COLUMN_NAME_RESP_TIME
-Y_LABEL_TITLE = ('$\mathbf{Mean\ RT}$ \n (ms)')
+Y_LABEL_TITLE = ('$\mathbf{Mean\ RT}$ \n (ms, 95%-CI)')
 
 NUM_OF_X_INDICES = 4
 
@@ -107,8 +108,8 @@ HYPOTHESES = {5: {False: 'x!=y', True: 'x<y'},
 PLOTTING_PARAMS = {"font.size": 16,
                    "axes.titlesize": 16,
                    "axes.labelsize": 16,
-                   'xtick.labelsize': 14,
-                   'ytick.labelsize': 14,
+                   'xtick.labelsize': 16,
+                   'ytick.labelsize': 16,
                    'legend.fontsize': 14,
                    'legend.title_fontsize': 14,
                    'legend.markerscale': 0.5,
@@ -230,8 +231,10 @@ def get_figure_and_axes(
     if is_multi_feedback_type_experiment:
 
         dynamics_fig, dynamics_axs = plt.subplots(
-            *dynamics_fig_array, sharex=True, sharey=True,
+            *dynamics_fig_array, sharey=True,
             figsize=dynamics_fig_size)
+
+
 
         contrasts_fig = plt.figure(constrained_layout=True,
                                    figsize=contrasts_fig_size, facecolor='none')
@@ -258,24 +261,29 @@ def get_figure_and_axes(
                          figsize=contrasts_fig_size, facecolor='none')
 
         dynamics_fig, top_contrasts_subfig, bottom_contrasts_subfig = (
-            fig.subfigures(3, 1, hspace=0.025, wspace=0,
-                           height_ratios=[0.45, 0.35, 0.3], facecolor='none'))
+            fig.subfigures(3, 1, hspace=0.0075, wspace=0.1,
+                           height_ratios=[0.45, 0.35, 0.45], facecolor='none'))
 
         dynamics_axs = dynamics_fig.subplots(
-            1, 2, sharey=True, sharex=True,
-            gridspec_kw={'hspace': 0.0375, 'wspace': 0})
+            1, 2, sharey=True, sharex=False,
+            gridspec_kw={'hspace': 0.005, 'wspace': 0.05})
+
+        dynamics_fig.set_facecolor('gainsboro')
 
         subplot_nrows, subplot_ncols = contrasts_fig_array
 
         axs_top = top_contrasts_subfig.subplots(
             subplot_nrows // 2, subplot_ncols, sharey=True, sharex=True,
-            gridspec_kw={'hspace': .005, 'wspace': 0})
+            gridspec_kw={'hspace': .005, 'wspace': 0.05})
+
 
         axs_bottom = bottom_contrasts_subfig.subplots(
             subplot_nrows // 2, subplot_ncols, sharey=True, sharex=True,
-            gridspec_kw={'hspace': .05, 'wspace': 0})
+            gridspec_kw={'hspace': .005, 'wspace': 0.05})
 
         contrasts_axs = np.stack([axs_top, axs_bottom], axis=0)
+
+        bottom_contrasts_subfig.set_facecolor('gainsboro')
 
         # Remove the references to the nested figures
         contrasts_fig = fig
@@ -366,10 +374,15 @@ def _prep_summaries_for_errorbar(df, margins, line_indexer=None, ):
     return mean_y_vals, cis, y_ns
 
 
-def _plot_errorbar(y_means, y_cis, y_ns, ax, legend_labels=None):
+def _plot_errorbar(y_means, y_cis, y_ns, ax, legend_labels=None,
+                   flip_x_axis=False):
     num_of_groups = len(legend_labels)
 
-    context_x_vals = np.tile(np.arange(0, NUM_OF_X_INDICES),
+    _x_axis_values = np.arange(0, NUM_OF_X_INDICES)
+    if flip_x_axis:
+        _x_axis_values = np.flip(_x_axis_values)
+
+    context_x_vals = np.tile(_x_axis_values,
                              num_of_groups).reshape(
         num_of_groups, NUM_OF_X_INDICES) + np.linspace(
         -1, 1, num_of_groups).reshape(-1, 1
@@ -435,14 +448,31 @@ def plot_dynamics(df, anova_results, row_indexer=ROW_INDEXER,
         numeric_margins_terms].apply(
         lambda s: s.str.replace("X", "")).apply(pd.to_numeric).values
 
+    # if is_multi_feedback_type_experiment:
+    #     df = df.sort_values(row_indexer)
+    #     margins_results = margins_results.sort_values(row_indexer)
+
+    if is_multi_feedback_type_experiment:
+        print(df[row_indexer].unique())
+        print(df[column_indexer].unique())
+        df = df.sort_values([row_indexer, column_indexer], ascending=[True, False])
+        margins_results = margins_results.sort_values(
+            [row_indexer, column_indexer], ascending=[True, False])
+        print(df[row_indexer].unique())
+        print(df[column_indexer].unique())
+    else:
+        df = df.sort_values([column_indexer], ascending=False)
+        margins_results = margins_results.sort_values(column_indexer, ascending=False)
+
     for (name, group), (_, margins), ax in zip(
-            df.groupby(groupby_terms),
-            margins_results.groupby(groupby_terms),
+            df.groupby(groupby_terms, sort=False),
+            margins_results.groupby(groupby_terms, sort=False),
             dynamics_axs.flat):
         _plot_errorbar(
             *_prep_summaries_for_errorbar(
                 group, margins, line_indexer=line_indexer), ax,
-            legend_labels=legend_stub_labels)
+            legend_labels=legend_stub_labels,
+        flip_x_axis=group[column_indexer].unique()[-1] == 0)
 
     if plot_mode == NOVEL_PLOT_MODE:
         [ax.text(s=i, x=1.05, y=0.5,
@@ -458,9 +488,18 @@ def plot_dynamics(df, anova_results, row_indexer=ROW_INDEXER,
     [ax.set_title(i, fontsize=AXIS_LABEL_FONTSIZE) for i, ax in
      zip(columns_titles, dynamics_axs[0, :])]
 
-    dynamics_axs[-1, 0].set_ylabel(y_label_title, )
-    dynamics_axs[-1, 0].set_xlabel(x_label_title, )
-    dynamics_axs[-1, 0].set(xticks=x_ticks)
+    dynamics_axs[-1, 0].set(
+        ylabel=y_label_title, xlabel=x_label_title)
+
+    for _ax in dynamics_axs[0, :]:
+        _ax.set(xticklabels=[])
+
+    for _ax in dynamics_axs[-1, :]:
+        _ax.tick_params(axis="x", direction="in", pad=-20)
+
+    dynamics_axs[-1, 1].set(xticks=x_ticks, xticklabels=x_ticks[::-1])
+    dynamics_axs[-1, 0].set(xticks=x_ticks, xticklabels=x_ticks)
+
 
     legends = []
     for _ax in dynamics_axs[:, 1]:
@@ -508,7 +547,9 @@ def plot_contrasts(
                           axis_grouper, line_grouper,
                           **plot_args)
 
-    # fig.tight_layout(h_pad=0.01, w_pad=0.01)
+    if not is_multi_feedback_type_experiment:
+        fig.tight_layout(pad=1.4) #, h_pad=0.0, w_pad=0.15)
+
     fig.savefig(
         plot_args['contrasts_plot_output_path'],
         dpi=DPI, facecolor='white')
@@ -526,8 +567,22 @@ def plot_wingplot(raw_data, test_data, axs,
                   **kwargs):
     max_delta, min_delta = 0, 0
 
+    # if is_multi_feedback_type_experiment:
+    #     axis_grouper = [cn.COLUMN_NAME_CYCLE_LENGTH, cn.COLUMN_NAME_PRIOR]
+    #     line_grouper = cn.COLUMN_NAME_FEEDBACK_TYPE
+    # # else:
+    # #     axis_grouper = [cn.COLUMN_NAME_PRIOR, cn.COLUMN_NAME_FEEDBACK_TYPE]
+    # #     line_grouper = cn.COLUMN_NAME_CYCLE_LENGTH
+    #
+    # raw_data = raw_data.sort_values(axis_grouper)
+    if is_multi_feedback_type_experiment:
+        raw_data = raw_data.sort_values(axis_grouper, ascending=[True, False])
+    else:
+        raw_data = raw_data.sort_values(axis_grouper, ascending=[False, True])
+        # raw_data = raw_data.sort_values(cn.COLUMN_NAME_PRIOR, ascending=False)
+
     for (name, group), (ax_index, ax) in zip(raw_data.groupby(
-            axis_grouper), enumerate(axs.flat)):
+            axis_grouper, sort=False), enumerate(axs.flat)):
 
         for (n, g), _color, pos in zip(group.groupby(line_grouper),
                                        COLORS, contrasts_x_axis_ticks):
@@ -570,12 +625,12 @@ def plot_wingplot(raw_data, test_data, axs,
         ax.set(
             xlim=[contrasts_x_axis_ticks[0] - 4,
                   contrasts_x_axis_ticks[-1] + 4],
-            xticks=contrasts_x_axis_ticks, xticklabels=[], )
+            xticks=[], xticklabels=[], )
 
         ax.axhline(0, ls='--', c='k')
 
         leg = ax.legend(title=f"Cohen's d ({STARS_ANNOT_STR})"
-        if ax_index == 0 else '',
+        if ax_index == 1 else '',
                         labelspacing=0.1, borderpad=0.1,
                         title_fontproperties={'weight': 'bold'},
                         ncol=3,
@@ -595,22 +650,22 @@ def plot_wingplot(raw_data, test_data, axs,
     for _color, pos, l in zip(COLORS, contrasts_x_axis_ticks,
                               legend_stub_labels):
         axs[-1, 0].annotate(
-            xy=[(pos + abs(min_x_lim)) / np.sum(np.abs((min_x_lim, max_x_lim))),
-                -0.125],
+            xy=[(pos + abs(min_x_lim)) / np.sum(np.abs((min_x_lim, max_x_lim)) * 0.9),
+                -0.025],
             ha='center', va='center', c=_color, rotation=30,
             text=l.replace(' ', '\n'),
             xycoords='axes fraction',
-            fontsize=AXIS_LABEL_FONTSIZE * 0.75
+            fontsize=AXIS_LABEL_FONTSIZE
         )
 
     axs[-1, 0].set_ylabel(
-        'Δ[$\mathbf{Context_{3}}$ - $\mathbf{Context_{0}}]$ \n(ms)')
+        'Δ[$\mathbf{Context_{3}}$ - $\mathbf{Context_{0}}]$ \n(ms, 95%-CI)')
 
     if is_multi_feedback_type_experiment:
         [ax.set_title(i, fontsize=AXIS_LABEL_FONTSIZE) for i, ax in
          zip(columns_titles, axs[0, :])]
 
-        [ax.text(s=str(i).replace(' ', '\n'), x=1.1, y=0.5,
+        [ax.text(s=str(i), x=1.1, y=0.5,
                  fontsize=AXIS_LABEL_FONTSIZE,
                  transform=ax.transAxes, rotation=-90, ha='center',
                  ) for i, ax in zip(cn.CYCLE_LENGTH_LEVELS,
@@ -641,8 +696,16 @@ def plot_sequential_bayes(raw_data: pd.DataFrame, test_data: typing.Dict,
         lambda s: s[cn.COLUMN_NAME_UID].nunique()
     ).max() + 4
 
+    # raw_data = raw_data.sort_values(axis_grouper)
+    # raw_data = raw_data.sort_values(cn.COLUMN_NAME_PRIOR, ascending=False)
+
+    if is_multi_feedback_type_experiment:
+        raw_data = raw_data.sort_values(axis_grouper, ascending=[True, False])
+    else:
+        raw_data = raw_data.sort_values(axis_grouper, ascending=[False, True])
+
     for (name, group), (ax_index, ax) in zip(
-            raw_data.groupby(axis_grouper), enumerate(axs.flat)):
+            raw_data.groupby(axis_grouper, sort=False), enumerate(axs.flat)):
 
 
         rect = Rectangle(
@@ -710,11 +773,13 @@ def plot_sequential_bayes(raw_data: pd.DataFrame, test_data: typing.Dict,
                  ) for i, ax in zip(cn.CYCLE_LENGTH_LEVELS,
                                     axs[:, 1].flat)]
 
-    _tick_distances = 10 if max_group_size < 80 else 15
+    _tick_distances = 10 if max_group_size < 80 else 15 if max_group_size < 120 else 20
     axs[-1, 0].set(xticks=range(0, max_group_size, _tick_distances),
                    xticklabels=range(0, max_group_size, _tick_distances
                                      ))
-    axs[-1, 0].set_xlabel(SEQUETIAL_BAYES_X_LABEL, fontsize=AXIS_LABEL_FONTSIZE)
+    axs[-1, 0].set_xlabel(SEQUETIAL_BAYES_X_LABEL, fontsize=AXIS_LABEL_FONTSIZE, labelpad=-2)
 
     axs[-1, 0].set_ylabel(SEQUENTIAL_BAYES_Y_AXIS_LABEL,
                           fontsize=AXIS_LABEL_FONTSIZE)
+
+

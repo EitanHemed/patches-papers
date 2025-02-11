@@ -1,1 +1,7 @@
-We recruited 296 participants. The demographics data for 6 was not obtained.The participants were aged 17.0-45.0 (M = 24.78, SD = 4.30), 59.31% identified as female.
+We recruited 308 participants. The demographics data for 7 was not obtained.
+On the 5-trials group, there were 160 participants, aged between 18 and 45 years old (M = 24.82, SD = 4.34). Out of which, 
+97 responded Female, 
+63 responded Male, 
+On the 10-trials group, there were 141 participants, aged between 17 and 42 years old (M = 24.60, SD = 4.23). Out of which, 
+83 responded Female, 
+58 responded Male, 

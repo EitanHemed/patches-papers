@@ -31,7 +31,9 @@ if __name__ == "__main__":
     [meta_analysis_utils.save_summaries_from_all_experiments(
         DIRS, m) for m in METHODS]
 
-    [meta_analysis_utils.draw_meta_fig(m) for m in METHODS]
-
-    [save_json(m, 'meta_analysis') for m in METHODS]
+    meta_analysis_utils.visualize_meta_analyses(meta_analysis_utils.run_meta_analyses())
+    #
+    # [meta_analysis_utils.draw_meta_fig(m) for m in METHODS]
+    #
+    # [save_json(m, 'meta_analysis') for m in METHODS]
 

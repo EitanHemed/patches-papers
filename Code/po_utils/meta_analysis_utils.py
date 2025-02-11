@@ -1,29 +1,30 @@
 import itertools
 import os
+import pdb
+import re
 import typing
 
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 import scipy as sp
 from matplotlib import pyplot as plt
-from scipy.stats import pearsonr
-
 from po_utils import constants as cn
 from po_utils import plotting
-
-# from po_utils import save_json
+from scipy.stats import pearsonr
 
 FIGSIZE = (8.5, 11)
 
 COLORS = plotting.COLORS[:2]
 
-PLOT_SUBPLOTS_TUPLE = (2, 1)
+PLOT_SUBPLOTS_TUPLE = (3, 1)
 
-POOLED_RESULTS_EXPERIMENT_ID = ''
+POOLED_RESULTS_EXPERIMENT_ID = ' '
 COLUMN_NAME_EXPERIMENT_ID = 'experiment'
 COLUMN_NAME_PAPER_ID = 'paper'
 COLUMN_NAME_EFFECT_SIZE = 'cohen'
+
+AX_TITLES = ['Probe-less experiments', 'Probe experiments (Amended preprocessing)',
+             'Probe experiments (Confounded preprocessing)']
 
 COLUMN_NAME_RAW_FREQUENCY_WEIGHT = 'raw_frequency_weight'
 COLUMN_NAME_RAW_INVERSE_VARIANCE_WEIGHTS = 'raw_delta_inverse_variance'
@@ -40,8 +41,8 @@ OUTPUT_COLUMN_NAMES = [
     'ci_high', 't', 'p_value', 'r', 'r_p_value',
 ]
 
-META_ANALYSIS_TABLE_COLUMNS = ['Paper', 'Exp. #', 'N',
-                               'Weight (%)',
+META_ANALYSIS_TABLE_COLUMNS = ['Paper - Exp. #', 'N',
+                               'Wt. (%)',
                                'ES', '95%-CI', 'p-value', ]
 
 OUTPUT_PATH = 'Output/{method}/{hashed_json}/Texts/summary.csv'
@@ -102,7 +103,7 @@ def pool_t_test_results_for_single_experiment(ts_dict, method):
 
 def save_summaries_from_all_experiments(exp_list: typing.List[str],
                                         method: str) -> None:
-    os.makedirs(f'meta_analysis/{method}/{cn.HASHED_SCREENING_PARAMS}',
+    os.makedirs(f'meta_analysis/{cn.HASHED_SCREENING_PARAMS}',
                 exist_ok=True)
 
     df = pd.concat(
@@ -124,25 +125,53 @@ def load_data_for_meta_analysis_plot(method: str) -> pd.DataFrame:
         f'meta_analysis/{method}/{cn.HASHED_SCREENING_PARAMS}/summaries.csv')
 
 
-def draw_meta_fig(method: str) -> pd.DataFrame:
-    data = prep_data_for_meta_analysis(method)
+def run_meta_analyses() -> typing.Tuple[pd.DataFrame]:
+    # Load raw
+    confounded = load_data_for_meta_analysis_plot(cn.PREPROCESSING_METHOD_CONFOUNDED)
+    amended = load_data_for_meta_analysis_plot(cn.PREPROCESSING_METHOD_AMENDED)
+    # Select relevant experiments for meta-analysis
 
-    fig, axs = plt.subplots(
-        *PLOT_SUBPLOTS_TUPLE, figsize=FIGSIZE, sharex=True)
+    amended_probeless_experiments = amended.loc[(amended[COLUMN_NAME_PAPER_ID] == 'revisited').values & (amended[
+                                                                                                             COLUMN_NAME_EXPERIMENT_ID].str.extract(
+        '(\d+)').astype(int) < 3).values[:, 0], :]
+    amended_probed_experiments = amended[~amended.index.isin(amended_probeless_experiments.index)]
+    confounded = confounded.loc[~amended.index.isin(amended_probeless_experiments.index)]
+    # Prepare data for meta-analysis
+    confounded = prep_data_for_meta_analysis(confounded)
+    amended_probeless_experiments = prep_data_for_meta_analysis(amended_probeless_experiments)
+    amended_probed_experiments = prep_data_for_meta_analysis(amended_probed_experiments)
 
-    draw_forest_plot(data, axs)
-    draw_table(data, fig, axs)
-
-    fig.tight_layout()
-
-    fig.savefig(
-        f'meta_analysis/{method}/{cn.HASHED_SCREENING_PARAMS}/forest_plot.jpg',
-        dpi=300, bbox_inches='tight')
-
-    return data
+    return amended_probeless_experiments, amended_probed_experiments, confounded
 
 
-def draw_forest_plot(data, axs):
+def visualize_meta_analyses(data: typing.Tuple[pd.DataFrame]) -> None:
+    for i in cn.PRIOR_LEVELS:
+
+        _data = [d.loc[d[cn.COLUMN_NAME_PRIOR] == i] for d in data]
+
+        fig, axs = plt.subplots(
+            *PLOT_SUBPLOTS_TUPLE, figsize=FIGSIZE, sharex='col',
+            # Do this by the number of experiments on each dataframe
+            gridspec_kw={'height_ratios': [i.shape[0] + 0.1 for
+                                           i in _data],
+                         #  'width_ratios': [2, 1]
+                         })
+        for df, ax, title in zip(_data, axs, AX_TITLES):
+            draw_forest_plot(df, ax, title)
+            draw_table(df, fig, ax)
+
+        fig.tight_layout()
+
+        fig.savefig(
+            f'meta_analysis/{cn.HASHED_SCREENING_PARAMS}/{i}_forest_plot.jpg',
+            dpi=300, bbox_inches='tight')
+
+
+def draw_forest_plot(data, ax, title) -> None:
+    if ax == ax.figure.axes[-1]:
+        ax.set_xlabel("Cohen's d Effect Size (95%-CI)", weight='bold')
+
+    ax.set_title(title, weight='bold', size=14)
 
     n_studies = data.groupby([COLUMN_NAME_EXPERIMENT_ID,
                               COLUMN_NAME_PAPER_ID]).size().shape[0]
@@ -150,89 +179,70 @@ def draw_forest_plot(data, axs):
     y_locs = np.linspace(0, n_studies * 2 - 1, n_studies * 2)
     y_vals = np.fliplr(y_locs.reshape(n_studies, 2).T)
 
-    scatter_sizes = np.ones(n_studies) * plt.rcParams['lines.markersize'] ** 2
-    scatter_sizes[-1] *= 4
+    for (n, g), c, y in zip(data
+                                    # .loc[data[COLUMN_NAME_EXPERIMENT_ID] == POOLED_RESULTS_EXPERIMENT_ID]
+                                    .groupby('patch_length'),
+                            COLORS, y_vals[::-1]  # [-1][::-1],
+                            ):
+        ax.axvline(g[COLUMN_NAME_EFFECT_SIZE].values[-1], c=c,
+                   ls='--', label=None, linewidth=1)
+        ax.scatter(x=g[COLUMN_NAME_EFFECT_SIZE], y=y, c=c,
+                   marker='s', label=None,
+                   s=g[COLUMN_NAME_STANDARDIZED_INVERSE_VARIANCE_WEIGHTS].div(100).values * plt.rcParams[
+                       'lines.markersize'] * 25
+                   )
 
-    for (name, group), ax in zip(
-            data.loc[
-                data[COLUMN_NAME_EXPERIMENT_ID] == POOLED_RESULTS_EXPERIMENT_ID
-            ].groupby('prior', sort=False), axs.flat):
-        for (n, g), c, y in zip(group.groupby('patch_length'),
-                                COLORS, y_vals.T[-1][::-1]):
-            ax.axvline(g[COLUMN_NAME_EFFECT_SIZE].values[-1], c=c,
-                       ls='--', label=None, linewidth=3)
-            ax.scatter(x=g[COLUMN_NAME_EFFECT_SIZE].values[-1], y=y, c=c,
-                       marker='D', label=None,
-                       s=scatter_sizes[-1])
+        ax.errorbar(x=g[COLUMN_NAME_EFFECT_SIZE].values, y=y, c=c,
+                    xerr=(g[['ci_low', 'ci_high']].apply(
+                        lambda s: s - g[
+                            COLUMN_NAME_EFFECT_SIZE])).abs().values.T,
+                    ls='none', label=n)
 
-    for (name, group), ax in zip(
-            data.loc[
-                data[COLUMN_NAME_EXPERIMENT_ID] != POOLED_RESULTS_EXPERIMENT_ID
-            ].groupby(cn.COLUMN_NAME_PRIOR, sort=False), axs.flat):
-        ax.yaxis.set_tick_params(rotation=30)
+    _data = data.loc[data[COLUMN_NAME_EXPERIMENT_ID] != POOLED_RESULTS_EXPERIMENT_ID]
 
-        ax.axvline(0, c='k')
-        group = group.sort_values(cn.COLUMN_NAME_CYCLE_LENGTH, ascending=False)
+    ax.yaxis.set_tick_params(rotation=30)
 
-        for (n, g), y, c in zip(
-                group.groupby(cn.COLUMN_NAME_CYCLE_LENGTH, sort=False),
-                y_vals[:, :-1], COLORS[::-1]):
-            ax.errorbar(x=g[COLUMN_NAME_EFFECT_SIZE].values, y=y, c=c,
-                        xerr=(g[['ci_low', 'ci_high']].apply(
-                            lambda s: s - g[
-                                COLUMN_NAME_EFFECT_SIZE])).abs().values.T,
-                        ls='none', label=None)
+    ax.axvline(0, c='k')
 
-            ax.scatter(x=g[COLUMN_NAME_EFFECT_SIZE].values, y=y, c=c,
-                       marker='s', label=n,
-                       s=scatter_sizes[:-1])
+    ax.grid(linestyle='-', alpha=0.5)
 
-            # For the pooled estimate, we need a seperate call to scatter as
-            # matplotlib won't allow multiple markers
+    ax.set(ylabel='', yticks=sorted(y_vals.flatten()), yticklabels=[], xlim=(-1.5, 1.5),
+           xticks=np.linspace(-1.5, 1.5, 7),
+           )
+    ax.yaxis.set_tick_params(width=0)
 
-        if name:  # prior is True
-            s = (
-                '$\mathbf{Context_{3}}$ - $\mathbf{Context_{0}}$ given $\mathbf{Prior_{1}}$')
-        else:
-            s = (
-                '$\mathbf{Context_{3}}$ - $\mathbf{Context_{0}}$ given $\mathbf{Prior_{0}}$')
-        ax.set_title(s,  # f'{"" if name else "No "}Feedback on trial N-1',
-                     weight='bold')
+    if ax == ax.figure.axes[0]:
 
-        ax.set_xlabel("Cohen's d Effect Size (95%-CI)", weight='bold')
-        ax.set(yticks=[], ylabel='')
+        # leg = ax.legend()
+        handles, labels = ax.get_legend_handles_labels()
 
-    leg = axs.flat[0].legend()
-
-    handles, labels = axs.flat[0].get_legend_handles_labels()
-    leg = axs.flat[0].legend(handles[::-1], labels[::-1],
-                             borderaxespad=0., facecolor='none',
-                             # fontsize=LEGEND_ENTRY_FONTSIZE,
-                             columnspacing=1,
-                             labelspacing=0.25,
-                             title='Cycle Duration',
-                             framealpha=0.5,
-                             loc='upper right'
-                             )
-
-    # Need to invert the order of colors as the legend handles are sorted as
-    # strings, so '5' comes after '10'
-    for t, c in zip(leg.get_texts(), COLORS):
-        t.set_color(c)
-    leg.get_title().set_weight('bold')
+        leg = ax.legend(handles, labels,
+                        borderaxespad=0., facecolor='none',
+                        # fontsize=LEGEND_ENTRY_FONTSIZE,
+                        columnspacing=1,
+                        labelspacing=0.25,
+                        title='Cycle Duration',
+                        framealpha=0,
+                        # loc='upper right'
+                        )
+        # Need to invert the order of colors as the legend handles are sorted as
+        # strings, so '5' comes after '10'
+        for t, c in zip(leg.get_texts(), COLORS):
+            t.set_color(c)
+        leg.get_title().set_weight('bold')
 
 
-def prep_data_for_meta_analysis(method: str) -> pd.DataFrame:
-    data = load_data_for_meta_analysis_plot(method)
-
+def prep_data_for_meta_analysis(data) -> pd.DataFrame:
     data[COLUMN_NAME_PAPER_ID] = data[COLUMN_NAME_PAPER_ID].map(
         {'revisited': 'Current',
          'relevance': 'Hemed & Eitam (2022)'})
 
+    # Expand the data to include the meta-analysis rows
     meta_rows = data.iloc[-4:, :].copy()
+    # Expand the data to include the meta-analysis relevant columns
     meta_rows.iloc[:, 3:] = np.nan
     meta_rows[COLUMN_NAME_EXPERIMENT_ID] = POOLED_RESULTS_EXPERIMENT_ID
-    meta_rows[COLUMN_NAME_PAPER_ID] = 'Meta Analysis'
+    meta_rows[COLUMN_NAME_PAPER_ID] = 'Pooled'
 
     meta_rows[['ci_low', 'ci_high']] = np.repeat(
         meta_rows[COLUMN_NAME_EFFECT_SIZE].values, 2).reshape(-1, 2)
@@ -260,6 +270,20 @@ def prep_data_for_meta_analysis(method: str) -> pd.DataFrame:
     ).values
 
     data = get_p_values(data)
+
+    ci_width = (data.loc[data[COLUMN_NAME_EXPERIMENT_ID] != POOLED_RESULTS_EXPERIMENT_ID
+                         ].groupby([cn.COLUMN_NAME_CYCLE_LENGTH, cn.COLUMN_NAME_PRIOR
+                                    ])[COLUMN_NAME_RAW_INVERSE_VARIANCE_WEIGHTS].sum() ** 0.5 * 1.96).values
+
+    data.loc[data[COLUMN_NAME_EXPERIMENT_ID] == POOLED_RESULTS_EXPERIMENT_ID, 'ci_low'] = (
+            data.loc[data[
+                         COLUMN_NAME_EXPERIMENT_ID] == POOLED_RESULTS_EXPERIMENT_ID, COLUMN_NAME_EFFECT_SIZE] - ci_width
+    ).values
+
+    data.loc[data[COLUMN_NAME_EXPERIMENT_ID] == POOLED_RESULTS_EXPERIMENT_ID, 'ci_high'] = (
+            data.loc[data[
+                         COLUMN_NAME_EXPERIMENT_ID] == POOLED_RESULTS_EXPERIMENT_ID, COLUMN_NAME_EFFECT_SIZE] + ci_width
+    ).values
 
     data = data.sort_values([cn.COLUMN_NAME_PRIOR, COLUMN_NAME_PAPER_ID,
                              COLUMN_NAME_EXPERIMENT_ID,
@@ -346,85 +370,138 @@ def get_p_values(data):
     return data
 
 
-def draw_table(data: pd.DataFrame, fig: plt.Figure, axs: npt.ArrayLike) -> None:
+def draw_table(data: pd.DataFrame, fig: plt.Figure, ax: plt.Axes) -> None:
     """
 
     References
     ----------
     https://stackoverflow.com/a/57169705/8522898
     """
-    # axs = fig.subplots(2, 1, sharex=True)
-
+    data = data.copy()
     t = 0.05
     b = 0.125
 
-    table_to_figure_width = 7 / 10
+    table_to_figure_width = 6.5 / 10
     left_margin = table_to_figure_width
 
-    for (name, group), ax in zip(data.groupby('prior', sort=False), axs.flat):
-        n = group.shape[0]
+    n = data.shape[0]
+    # ax.axis('off')
 
-        fig.subplots_adjust(left=left_margin,
-                            top=1 - t - (1 - t - b) / (n + 1), wspace=0)
+    fig.subplots_adjust(left=left_margin,
+                        )
+    ax.margins(y=1 / 2 / n)
 
-        ax.margins(y=1 / 2 / n)
+    top_ax = ax == fig.axes[0]
+    data.loc[
+        data[COLUMN_NAME_PAPER_ID].eq(data[COLUMN_NAME_PAPER_ID].shift()),
+        COLUMN_NAME_PAPER_ID] = ''
 
-        group.loc[
-            group[COLUMN_NAME_PAPER_ID].eq(group[COLUMN_NAME_PAPER_ID].shift()),
-            COLUMN_NAME_PAPER_ID] = ''
+    paper_labels = data[COLUMN_NAME_PAPER_ID].values
 
-        paper_labels = group[COLUMN_NAME_PAPER_ID].values
+    experiment_labels = [x.split(' ')[-1] if not i % 2 else '' for i, x in
+                         enumerate(data[COLUMN_NAME_EXPERIMENT_ID].values)]
 
-        experiment_labels = [x.split(' ')[-1] if not i % 2 else '' for i, x in
-                             enumerate(group[COLUMN_NAME_EXPERIMENT_ID].values)]
+    lower_ci = data['ci_low'].apply(lambda s: f'{s:.2f}' if s < 0 else f'{s:.2f} ').values
+    upper_ci = data['ci_high'].apply(lambda s: f'{s:.2f}' if s < 0 else f' {s:.2f}').values
 
-        ci_values = group[['ci_low', 'ci_high']].apply(
-            lambda s: f'[{s[0]:.2f} {s[1]:.2f}]', axis=1).values
-        ci_values[-2:] = ''  # For the pooled results
+    ci_values = [f'[{l} {u}]' for l, u in zip(lower_ci, upper_ci)]
 
-        cohen_vals = [f"{i:.2f}" if np.abs(i) > 0.01 else '<|.01|'
-                      for i in group[COLUMN_NAME_EFFECT_SIZE].values]
+    ci_values = ['' if 'nan' in i else i for i in ci_values]
 
-        weights = [
-            f"{i:.2f}".zfill(5) for i in
-            group[COLUMN_NAME_STANDARDIZED_INVERSE_VARIANCE_WEIGHTS].round(
-                2).values
-        ]
+    cohen_vals = [f"{i:.2f}" if np.abs(i) > 0.01 else '<|.01|'
+                  for i in data[COLUMN_NAME_EFFECT_SIZE].values]
+    max_len = max([len(i) for i in cohen_vals])
+    cohen_vals = [i.rjust(max_len) for i in cohen_vals]
 
-        p_values = [
-            f'{i:.3f}' if i >= .001 else '<.001' for i in
-            group['p_value'].round(4).values]
+    weights = [
+        f"{i:.2f}".zfill(5) for i in
+        data[COLUMN_NAME_STANDARDIZED_INVERSE_VARIANCE_WEIGHTS].round(
+            2).values
+    ]
 
-        cell_vals = [paper_labels, experiment_labels,
-                     group['n'].fillna('').astype(str).str.replace(".0", "",
-                                                                   regex=False),
-                     weights, cohen_vals, ci_values, p_values]
+    p_values = [
+        f'{i:.3f}' if i >= .001 else '<.001' for i in
+        data['p_value'].round(4).values]
 
-        cell_vals = np.vstack([np.array(i).reshape(1, -1) for i in cell_vals])
+    # Modify paper and experiment labels
+    maximum_col_width = len('Hemed & Eitam (2022) - EX')
+    paper_and_experiment_labels = [
+        f"{i} - E{j}" if j else i
+        for i, j in zip(paper_labels, experiment_labels)
+    ]
 
-        table = ax.table(cellText=cell_vals.T,
-                         colLabels=META_ANALYSIS_TABLE_COLUMNS,
-                         bbox=(-(left_margin + table_to_figure_width), 0.0,
-                               left_margin + table_to_figure_width,
-                               (n + 1) / n),
-                         cellLoc='center')
+    cell_vals = [paper_and_experiment_labels,
+                 data['n'].fillna('').astype(str).str.replace(".0", "",
+                                                              regex=False),
+                 weights, cohen_vals, ci_values, p_values]
 
-        # Colorize specific columns
-        [[table[(i, j)].get_text().set_color(c) for i, c in
-          zip(range(1, n + 1),
-              itertools.cycle(COLORS))] for j in range(2, 7)]
+    cell_vals = np.vstack([np.array(i).reshape(1, -1) for i in cell_vals])
 
-        # Set column headers to bold
-        [[table[(j, i)].get_text().set_weight('bold') for i in range(7)]
-         for j in (0, cell_vals.shape[1], cell_vals.shape[1] - 1)
-         ]
+    # Match the width of the first table to the rest
+    if top_ax:
+        cell_vals[0, -3] = ' ' * len('Hemed & Eitam (2022)')
 
-        for i, child in enumerate(table.get_children()):
-            child.set(linewidth=0)
+    table = ax.table(cellText=cell_vals.T,
+                     colLabels=META_ANALYSIS_TABLE_COLUMNS,
+                     bbox=(-(left_margin + table_to_figure_width), 0.0,
+                           left_margin + table_to_figure_width,
+                           (n + 1) / n),
+                     cellLoc='center',
+                     colWidths=[0.2,  # Manuscript and experiment label
+                                0.06,  # N
+                                0.175,  # Weight
+                                0.09,  # ES
+                                0.2,  # CI
+                                0.125],  # p-value
 
-        table.auto_set_font_size(False)
-        table.set_fontsize(16)
+                     )
 
-        table.auto_set_column_width(col=range(7))
+    # Colorize specific columns
+    [[table[(i, j)].get_text().set_color(c) for i, c in
+      zip(range(1, n + 1),
+          itertools.cycle(COLORS))] for j in range(1, 6)]
+    #
+    # Set column headers to bold
+    [[table[(j, i)].get_text().set_weight('bold') for i in range(6)]
+     for j in (0, cell_vals.shape[1], cell_vals.shape[1] - 1)
+     ]
+
+    for i, child in enumerate(table.get_children()):
+        child.set(linewidth=0)
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(14)
+
+    for i in range(0, cell_vals.shape[1]):
+        table[i, 0]._loc = 'right'
+        table[i, 0]._text.set_horizontalalignment('right')
+
+    # Ugly hack to force the first column to have a fixed width on all tables
+    if top_ax:
+        text = table[cell_vals.shape[1], 0].get_text()
+        text.set_text('Hemed & Eitam (2022) - E1')
+        text.set_weight('normal')
+        text.set_color('none')
+
+    table.auto_set_column_width(False)  # col=range(1, 6))
+
+    # # Create a horizontal line between the 2nd to last row and the third to last row, to separate the pooled results
+    # # from the individual experiments. Do not add cells, but rather draw a line.
+    # for i in range(1, 6):
+    #     for row in range(n, n - 2, -1):
+    #         table[(row, i)].set_edgecolor('black')
+    #         table[(row, i)].set_linewidth(0.5)
 
     fig.canvas.draw()  # need to draw the figure twice
+
+    if ax == ax.figure.axes[-1]:
+        prior = data[cn.COLUMN_NAME_PRIOR].values[0]
+
+        if prior:  # prior is True
+            s = (
+                '$\mathbf{Context_{3}}$ - $\mathbf{Context_{0}}$ $\mathbf{given}$ $\mathbf{Prior_{1}}$')
+        else:
+            s = (
+                '$\mathbf{Context_{3}}$ - $\mathbf{Context_{0}}$ $\mathbf{given}$ $\mathbf{Prior_{0}}$')
+        ax.figure.suptitle(s,  # f'{"" if name else "No "}Feedback on trial N-1',
+                           weight='bold', fontsize=18, x=0.5, ha='right')

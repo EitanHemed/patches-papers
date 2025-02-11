@@ -1,13 +1,13 @@
 FOR CYCLE DURATION 5: 
 FOR PRIOR VALUE False: 
 CONTROL FEEDBACK a non-significant mean change [-2.30 MS (17.10); t(41) = -0.86, p = 0.395, Cohen's d = -0.13, (-0.44, 0.17), BF1:0 = 0.2357]
-NEGLIGIBLE OUTCOME a significant mean increase [4.58 MS (14.49); t(53) = 2.30, p = 0.025, Cohen's d = 0.31, (0.04, 0.59), BF1:0 = 1.6656]
+NEGLIGIBLE OUTCOME a significant mean increase [4.59 MS (14.33); t(58) = 2.44, p = 0.018, Cohen's d = 0.32, (0.05, 0.58), BF1:0 = 2.1474]
 SUBSTANTIAL OUTCOME a non-significant mean change [-3.02 MS (17.55); t(33) = -0.99, p = 0.330, Cohen's d = -0.17, (-0.51, 0.17), BF1:0 = 0.2882]
 
 
 FOR PRIOR VALUE True: 
 CONTROL FEEDBACK a significant mean decrease [-16.44 MS (19.15); t(41) = -5.49, p < 0.001, Cohen's d = -0.85, (-1.20, -0.49), BF1:0 = 15818.9896]
-NEGLIGIBLE OUTCOME a significant mean decrease [-12.00 MS (17.22); t(53) = -5.08, p < 0.001, Cohen's d = -0.69, (-0.99, -0.39), BF1:0 = 7048.2421]
+NEGLIGIBLE OUTCOME a significant mean decrease [-11.47 MS (16.74); t(58) = -5.22, p < 0.001, Cohen's d = -0.68, (-0.96, -0.39), BF1:0 = 13207.6437]
 SUBSTANTIAL OUTCOME a significant mean decrease [-15.65 MS (22.68); t(33) = -3.96, p < 0.001, Cohen's d = -0.68, (-1.05, -0.30), BF1:0 = 153.6838]
 
 
@@ -18,13 +18,13 @@ FOR CYCLE DURATION 10:
 FOR PRIOR VALUE False: 
 CONTROL FEEDBACK a significant mean increase [7.70 MS (23.53); t(40) = 2.07, p = 0.045, Cohen's d = 0.32, (0.01, 0.64), BF1:0 = 1.1524]
 NEGLIGIBLE OUTCOME a significant mean increase [9.16 MS (18.44); t(35) = 2.94, p = 0.006, Cohen's d = 0.49, (0.14, 0.83), BF1:0 = 6.7402]
-SUBSTANTIAL OUTCOME a significant mean increase [12.35 MS (19.66); t(58) = 4.78, p < 0.001, Cohen's d = 0.62, (0.34, 0.90), BF1:0 = 1517.9499]
+SUBSTANTIAL OUTCOME a significant mean increase [11.69 MS (20.46); t(62) = 4.50, p < 0.001, Cohen's d = 0.57, (0.30, 0.83), BF1:0 = 639.9523]
 
 
 FOR PRIOR VALUE True: 
 CONTROL FEEDBACK a significant mean decrease [-16.31 MS (19.20); t(40) = -5.37, p < 0.001, Cohen's d = -0.84, (-1.19, -0.48), BF1:0 = 10303.2256]
 NEGLIGIBLE OUTCOME a non-significant mean change [-2.88 MS (14.88); t(35) = -1.15, p = 0.130, Cohen's d = -0.19, (-0.52, 0.14), BF1:0 = 0.5648]
-SUBSTANTIAL OUTCOME a significant mean decrease [-14.90 MS (20.81); t(58) = -5.46, p < 0.001, Cohen's d = -0.71, (-0.99, -0.42), BF1:0 = 30065.2496]
+SUBSTANTIAL OUTCOME a significant mean decrease [-14.56 MS (21.40); t(62) = -5.36, p < 0.001, Cohen's d = -0.67, (-0.95, -0.40), BF1:0 = 24034.1846]
 
 
 

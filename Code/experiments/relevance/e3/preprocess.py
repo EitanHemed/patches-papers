@@ -15,7 +15,7 @@ def load_raw():
     df = pd.read_csv(f'Input/raw_{CURRENT_EXP}.zip')
 
     # remove pilot runs
-    df = df.loc[df['participant'] >= 1000]
+    df = df.loc[~df['participant'].between(990, 999)]
 
     df[c.COLUMN_NAME_UID] = df['participant'].astype(str) + ':' + df[
         'date'].astype(str)

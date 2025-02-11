@@ -1,5 +1,6 @@
 import glob
 import itertools
+import pdb
 import re
 import typing
 from functools import partial
@@ -69,12 +70,20 @@ def load_data(method) -> pd.DataFrame:
 
 
 def _mark_distance_from_probes(df: pd.DataFrame) -> pd.DataFrame:
-    df[cn.TRIALS_SINCE_LAST_PROBED_TRIAL] = df.groupby(
+
+    # Get the indices of the first probed trial for each participant
+    first_probed_trial_indices = df.loc[df[cn.COLUMN_NAME_PROBED_TRIAL]].groupby(
+        cn.COLUMN_NAME_UID)[cn.COLUMN_NAME_TRIAL_NUMBER].min().to_dict()
+
+    # Assign the number of trials since the last probed trial
+    df[cn.COLUMN_NAME_TRIALS_SINCE_LAST_PROBED_TRIAL] = df.groupby(
         [cn.COLUMN_NAME_UID,
          df[cn.COLUMN_NAME_PROBED_TRIAL].cumsum()]).cumcount().values
-    # Remove data prior to the first probed trial
-    df.loc[
-        df[cn.COLUMN_NAME_TRIAL_NUMBER].le(6), cn.TRIALS_SINCE_LAST_PROBED_TRIAL] = np.nan
+
+    # Assign NaN to the trials before the first probed trial
+    df.loc[df[cn.COLUMN_NAME_TRIAL_NUMBER] < df[cn.COLUMN_NAME_UID].map(first_probed_trial_indices),
+              cn.COLUMN_NAME_TRIALS_SINCE_LAST_PROBED_TRIAL
+              ] = np.nan
 
     return df
 
@@ -344,32 +353,40 @@ def save_demographics_report():
     task_df = pd.read_csv(task_path)
     demog_df = pd.read_csv(demog_path)
 
+    demog_df[cn.COLUMN_NAME_CYCLE_LENGTH] = demog_df[cn.COLUMN_NAME_UID].str.extract(r"^(\d+)").astype(int).mod(2)
+    demog_df[cn.COLUMN_NAME_CYCLE_LENGTH] = demog_df[cn.COLUMN_NAME_CYCLE_LENGTH].replace({0: 10, 1: 5})
+
     numof_participants_with_task_data = task_df[cn.COLUMN_NAME_UID].nunique()
     numof_participants_with_demog_data = demog_df[cn.COLUMN_NAME_UID].nunique()
 
     difference_in_number_of_missing_demog_data = (
             numof_participants_with_task_data - numof_participants_with_demog_data)
     demog_missing_stub = (
-        f'The demographics data for {difference_in_number_of_missing_demog_data} was not obtained.'
+        f'The demographics data for {difference_in_number_of_missing_demog_data:.0f} was not obtained.'
         if difference_in_number_of_missing_demog_data != 0 else '')
 
-    percentage_of_females = \
-        demog_df[cn.COLUMN_NAME_PARTICIPANT_SEX].value_counts(
-            normalize=True).mul(
-            100)['Female']
-    min_age, max_age, mean_age, sd_age = demog_df[
-        cn.COLUMN_NAME_PARTICIPANT_AGE].agg(
-        ['min', 'max', 'mean',
-         np.std]).values
-
     with open(OUTPUT_DEMOGRAPHICS_TXT_PATH, 'w') as f:
-        print(
-            (f'We recruited {numof_participants_with_task_data} participants. '
-             f'{demog_missing_stub}'
-             f'The participants were aged {min_age}-{max_age} (M = {mean_age:.2f}, SD = '
-             f'{sd_age:.2f}), {percentage_of_females:.2f}% identified as female.'),
-            file=f
-        )
+
+        print(f'We recruited {task_df[cn.COLUMN_NAME_UID].nunique()} participants. ', demog_missing_stub, sep='', file=f)
+
+        for name, group in demog_df.groupby(cn.COLUMN_NAME_CYCLE_LENGTH):
+
+            min_age, max_age, mean_age, sd_age = group[
+                cn.COLUMN_NAME_PARTICIPANT_AGE].agg(
+                ['min', 'max', 'mean',
+                 np.std]).values
+
+            print(f"On the {name:.0f}-trials group, there were {group.shape[0]} participants, "
+                    f"aged between {min_age:.0f} and {max_age:.0f} years old (M = {mean_age:.2f}, SD = {sd_age:.2f}). ",
+                  f"Out of which, ",
+                  file=f, sep='')
+
+            categories = group[cn.COLUMN_NAME_PARTICIPANT_SEX].value_counts()
+            for category, count in zip(categories.index, categories.values):
+                print(f'{count} responded {category}, ', file=f, sep='')
+            nan_count = group[cn.COLUMN_NAME_PARTICIPANT_SEX].isna().sum()
+            if nan_count > 0:
+                print(f'{nan_count} did not respond to the question. ', file=f)
 
 
 def _get_data_file_names() -> typing.Dict:
