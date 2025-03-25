@@ -1,9 +1,11 @@
 #!/bin/bash
 
+rm -rf patches-papers
+git clone https://github.com/EitanHemed/patches-papers
+
 # Enable strict mode.
 set -euo pipefail
 
-set +euo pipefail
 source activate patches
 set -euo pipefail
 

@@ -24,15 +24,18 @@ RUN apt-get update && apt-get install -y \
 RUN mv reproduce.ipynb "patches-papers/Code" && \
     cd "patches-papers/Code" && \
     conda run -n patches pip install -e . && \
-    rm -r -f po_utils.egg-info
+    rm -r -f po_utils.egg-info && \
+    cd ../..
 RUN conda run -n patches python -c "import robusta as rst"
 
-EXPOSE 8888
-
-# The code to run when container is started:
-COPY entrypoint.sh .
+# Copy entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
 
 # Make entrypoint.sh executable
-RUN chmod +x entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
-ENTRYPOINT ["./entrypoint.sh"]
+# Expose the notebook port
+EXPOSE 8888
+
+# Set the entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
