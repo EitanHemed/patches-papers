@@ -21,11 +21,34 @@ The repository structure is as follows:
 2. [Code](Code) - the code and data to reproduce the analyses associated with
    the papers.
 
-More detailed description coming soon.
+The relevant pre-registrations are available [here](https://osf.io/b6c9a/wiki/home/).
 
 ## Setup
 
-To run the pipeline you will need to install a few dependencies. The best option
+To run the pipeline you can either choose between running it using [docker](https://docker.com),
+or using a local installation.
+
+### Docker
+
+First, follow this guide to install Docker on your system: https://docs.docker.com/get-docker/
+
+After setting up Docker on your system, pull the image from Docker Hub by running the following command in the terminal:
+
+`docker pull eitanhemed/patches-papers:latest
+`
+
+Then, run the following command to start the container, which will also launch up a Jupyter server:
+
+`docker run -p 8888:8888 eitanhemed/patches-papers
+`
+
+Once the Jupyter server is up, you can access it by opening the following link in your browser, for example by going to
+the terminal and clicking on the link: http://127.0.0.1:8888/tree, or any other link that appears in your terminal.
+Your entrypoint will be a jupyter notebook, allowing you to explore the data and output, edit the project code, etc.
+
+### Local installation
+
+You will need to install a few dependencies. The best option
 is to do it on a new conda environment, as follows:
 
 ```
@@ -39,11 +62,11 @@ pip install .
 Note that installing `robusta` involves setting up R on your system. The first
 session in which `robusta` is imported will require R to install *many*
 packages. The first time you import `robusta` the dependencies installation
-process can take a few minutes on Windows, and up to 30 minutes on Linux.
+process can take a few minutes on Windows, and about 10-15 minutes on Linux.
 
 ## Usage
 
-Using the project environment, run `python run_all.py`
+Regardless of setting up locally or via Docker, using the project environment, run `python run_all.py`
 from the `Code` directory.
 
 ## FAQ

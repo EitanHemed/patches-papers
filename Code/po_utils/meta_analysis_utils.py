@@ -78,7 +78,7 @@ def extract_contrast_summary(t):
 
 
 def pool_t_test_results_for_single_experiment(ts_dict, method):
-    current_exp_name = os.getcwd().split('\\')[-1]
+    current_exp_name = os.getcwd().split(os.path.sep)[-1]
 
     # We only need control feedback
     feedback_types = cn.FEEDBACK_TYPE_SINGLE
@@ -109,7 +109,7 @@ def save_summaries_from_all_experiments(exp_list: typing.List[str],
     df = pd.concat(
         [pd.read_csv(f'{e}/' + OUTPUT_PATH.format(
             method=method, hashed_json=cn.HASHED_SCREENING_PARAMS)
-                     ).assign(paper=e.split('\\')[-2]) for e in exp_list])
+                     ).assign(paper=e.split(os.path.sep)[-2]) for e in exp_list])
 
     df = df.sort_values([COLUMN_NAME_PAPER_ID, COLUMN_NAME_EXPERIMENT_ID, ],
                         ascending=[False, True])
@@ -154,7 +154,7 @@ def visualize_meta_analyses(data: typing.Tuple[pd.DataFrame]) -> None:
             # Do this by the number of experiments on each dataframe
             gridspec_kw={'height_ratios': [i.shape[0] + 0.1 for
                                            i in _data],
-                         #  'width_ratios': [2, 1]
+                         # 'width_ratios': [1.05, 0.95]
                          })
         for df, ax, title in zip(_data, axs, AX_TITLES):
             draw_forest_plot(df, ax, title)
@@ -381,7 +381,7 @@ def draw_table(data: pd.DataFrame, fig: plt.Figure, ax: plt.Axes) -> None:
     t = 0.05
     b = 0.125
 
-    table_to_figure_width = 6.5 / 10
+    table_to_figure_width = 6.8 / 10
     left_margin = table_to_figure_width
 
     n = data.shape[0]
@@ -470,7 +470,7 @@ def draw_table(data: pd.DataFrame, fig: plt.Figure, ax: plt.Axes) -> None:
         child.set(linewidth=0)
 
     table.auto_set_font_size(False)
-    table.set_fontsize(14)
+    table.set_fontsize(13)
 
     for i in range(0, cell_vals.shape[1]):
         table[i, 0]._loc = 'right'
@@ -504,4 +504,4 @@ def draw_table(data: pd.DataFrame, fig: plt.Figure, ax: plt.Axes) -> None:
             s = (
                 '$\mathbf{Context_{3}}$ - $\mathbf{Context_{0}}$ $\mathbf{given}$ $\mathbf{Prior_{0}}$')
         ax.figure.suptitle(s,  # f'{"" if name else "No "}Feedback on trial N-1',
-                           weight='bold', fontsize=18, x=0.5, ha='right')
+                           weight='bold', fontsize=16, x=0.5, ha='right')

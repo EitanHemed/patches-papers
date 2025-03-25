@@ -1,99 +1,112 @@
+import re
+from functools import partial
+
+import numpy as np
 import pandas as pd
 
 from po_utils import constants as c
 
 CURRENT_EXP = 'e2'
 
-def unique_participant(df):
-    return (df['participant'].astype(str)
-            + ':' + df['date'].astype(str))
+# TODO - unpack also demographics, Adam and debrief questionnaires
 
 
-def handle_task():
-    df = pd.read_csv(f'Input/raw_{CURRENT_EXP}_task.zip')
+def load_raw():
+    df = pd.read_csv(f'Input/raw_{CURRENT_EXP}.zip')
+
     # remove pilot runs
-    df = df.loc[(df['participant'] < 900)]
-    df[c.COLUMN_NAME_UID] = unique_participant(df)
-    df[c.COLUMN_NAME_FEEDBACK_MANIPULATION_TYPE] = 0
+    df = df.loc[~df['participant'].between(990, 999)]
 
-    df[c.COLUMN_NAME_TASK_RESPONSE_WINDOW_DURATION] = 1000
-    df[c.COLUMN_NAME_FEEDBACK_DURATION] = 150
-    df[c.COLUMN_NAME_MAXIMAL_TASK_RT] = (
-            df[c.COLUMN_NAME_TASK_RESPONSE_WINDOW_DURATION]
-            - df[c.COLUMN_NAME_FEEDBACK_DURATION])
+    df[c.COLUMN_NAME_UID] = df['participant'].astype(str) + ':' + df[
+        'date'].astype(str)
+    df[c.COLUMN_NAME_FEEDBACK_TYPE] = 'blank'
 
-    df = df.sort_values(
+    df[c.COLUMN_NAME_FEEDBACK_MANIPULATION_TYPE] = 1
+
+    return df
+
+
+def handle_task(df):
+    task_df = df.copy()
+
+    task_df = task_df.rename(
+        columns={
+            'task_key_resp.rt': c.COLUMN_NAME_RAW_RESP_TIME,
+            'response_accuracy': c.COLUMN_NAME_RESP_ACCURACY
+        }
+    )
+
+    task_df[[c.COLUMN_NAME_RAW_RESP_COUNT, c.COLUMN_NAME_RAW_RESP_DURATION]
+    ] = np.nan
+
+    task_df[c.COLUMN_NAME_RAW_RESP_TIME] *= 1000
+    task_df[c.COLUMN_NAME_FEEDBACK_CYCLE] = task_df[
+        'effect_pertubration_theta'].isna()
+
+    task_df[c.COLUMN_NAME_TASK_RESPONSE_WINDOW_DURATION] = 850
+    task_df[c.COLUMN_NAME_FEEDBACK_DURATION] = 100
+    task_df[c.COLUMN_NAME_MAXIMAL_TASK_RT] = (
+            task_df[c.COLUMN_NAME_TASK_RESPONSE_WINDOW_DURATION]
+            - task_df[c.COLUMN_NAME_FEEDBACK_DURATION])
+
+    task_df = task_df.sort_values(
         [c.COLUMN_NAME_UID, c.COLUMN_NAME_TRIAL_NUMBER])
 
-    df.to_csv(f'Input/{CURRENT_EXP}_task.zip')
+    task_df.loc[~task_df['trials.thisRepN'].isna()].to_csv(
+        f'Input/{CURRENT_EXP}_task.zip', index=False)
+
+    task_df.loc[~task_df['instruct_key'].isna()].to_csv(
+       f'Input/{CURRENT_EXP}_training_block.zip',
+        index=False)
 
 
-def handle_adam():
-    df = pd.read_csv(f'Input/raw_{CURRENT_EXP}_adam.zip')
-    df[c.COLUMN_NAME_UID] = unique_participant(df)
-    df.groupby([c.COLUMN_NAME_UID, 'val'])['rating.response'].mean(
-    ).unstack().reset_index().rename(columns={'neg': 'Negative Scale',
-                                              'pos': 'Positive Scale'})
-    df.to_csv(f'Input/{CURRENT_EXP}_adam.zip')
+def handle_adam(df):
+    adam_df = df.copy().loc[df['adam_scale_item_slider.response'].notna()]
+    adam_df = adam_df.groupby(
+        [c.COLUMN_NAME_UID, 'val'])['adam_scale_item_slider.response'].mean(
+    ).unstack().reset_index().rename(columns={'pos': 'Positive Scale',
+                                              'neg': 'Negative Scale'})
+
+    adam_df.to_csv(f'Input/{CURRENT_EXP}_adam.zip')
 
 
-def _handle_open_ended(df: pd.DataFrame):
-    df = df.loc[:, ['participant', 'date', 'que', 'resp']]
-    df = df.loc[df['participant'] < 900]
+def handle_demog(df):
+    stub = 'demog_que_(.*)_slider.response'
+    responses = df.filter(
+        regex=stub).columns.tolist()
+    exp = re.compile(stub)
 
-    df[c.COLUMN_NAME_UID] = unique_participant(df)
-    # df[['participant', 'date']].astype(str).apply(
-    #     lambda s: '{} - {}'.format(*s.values), axis=1).factorize()[0]
-    df = df.loc[df['resp'].notna()]
-    return df.groupby(['unique_participant', 'que'])[
-        'resp'].first().unstack().reset_index()
+    demog_df = df.loc[:, [c.COLUMN_NAME_UID] + responses].dropna()
+
+    demog_df = demog_df.rename(columns=dict(zip(responses,
+                                                [s.groups()[0] for s in list(
+                                                    map(partial(re.search,
+                                                                exp, ),
+                                                        responses))])))
+
+    demog_df['sex'] = demog_df['sex'].map(
+        dict(zip(range(1, 4), ['Male', 'Female', 'Rather not say']))).values
+    demog_df['hand'] = demog_df['hand'].map(
+        dict(zip(range(1, 4), ['Right', 'Left', 'Ambidextrous']))).values
+    demog_df['adhd'] = demog_df['adhd'].map(
+        dict(zip(range(1, 4), ["ADHD", "ADD", "None"]))).values
+
+    demog_df.to_csv(f'Input/{CURRENT_EXP}_demog.zip')
 
 
-def handle_demog():
-    df = _handle_open_ended(pd.read_csv(f'Input/raw_{CURRENT_EXP}_demog.zip'))
-    df[c.COLUMN_NAME_PARTICIPANT_SEX] = df[
-        c.COLUMN_NAME_PARTICIPANT_SEX].replace({'1': 'Male', '2': 'Female'})
-    df.to_csv(f'Input/{CURRENT_EXP}_demog.zip')
+def handle_debrief(df):
+    debrief_df = df.loc[df['debrief_resp'].notna()]
 
+    debrief_df = debrief_df.groupby(
+        [c.COLUMN_NAME_UID, 'debrief_item_he', ])['debrief_resp'].first(
+    ).unstack().reset_index()
 
-def handle_debrief():
-    df = _handle_open_ended(pd.read_csv(f'Input/raw_{CURRENT_EXP}_debrief.zip'))
-    df.to_csv(f'Input/{CURRENT_EXP}_debrief.zip')
-
-
-def handle_subjectives():
-    df = pd.read_csv(f'Input/raw_{CURRENT_EXP}_subjectives.zip')
-    df = df.loc[df['participant'] < 900]
-
-    df = df[['participant', 'date', ] +
-            df.filter(regex='response$').columns.tolist()]
-
-    df = df.groupby(['date', 'participant']).mean()
-    resp_columns = df.columns.tolist()
-    df = df.reset_index()
-
-    df = df.rename(
-        columns=dict(zip(
-            resp_columns, [i.split(".")[0].title().replace('_', ' ')
-                           for i in
-                           resp_columns])))
-
-    df[c.COLUMN_NAME_UID] = unique_participant(df)
-
-    # df[['participant', 'date']].astype(str).apply(
-    #     lambda s: '{} - {}'.format(*s.values), axis=1).factorize()[0]
-
-    df.rename(columns={'date': "date_subjectives"}, inplace=True)
-
-    df.to_csv(f'Input/{CURRENT_EXP}_subjectives.zip')
+    debrief_df.to_csv(f'Input/{CURRENT_EXP}_debrief.zip')
 
 
 def main():
-    handle_task()
-    handle_adam()
-    handle_demog()
-    handle_debrief()
-    handle_subjectives()
+    df = load_raw()
+    [f(df) for f in [handle_task, handle_adam, handle_demog, handle_debrief]]
 
 
 if __name__ == '__main__':

@@ -113,7 +113,7 @@ PLOTTING_PARAMS = {"font.size": 16,
                    'legend.fontsize': 14,
                    'legend.title_fontsize': 14,
                    'legend.markerscale': 0.5,
-                   'font.family': 'Arial',
+                   'font.family': 'DejaVu Sans',
                    'figure.dpi': DPI,
                    'figure.facecolor': FIGURE_FACECOLOR,
                    'legend.borderaxespad': 0.,
@@ -453,13 +453,9 @@ def plot_dynamics(df, anova_results, row_indexer=ROW_INDEXER,
     #     margins_results = margins_results.sort_values(row_indexer)
 
     if is_multi_feedback_type_experiment:
-        print(df[row_indexer].unique())
-        print(df[column_indexer].unique())
         df = df.sort_values([row_indexer, column_indexer], ascending=[True, False])
         margins_results = margins_results.sort_values(
             [row_indexer, column_indexer], ascending=[True, False])
-        print(df[row_indexer].unique())
-        print(df[column_indexer].unique())
     else:
         df = df.sort_values([column_indexer], ascending=False)
         margins_results = margins_results.sort_values(column_indexer, ascending=False)

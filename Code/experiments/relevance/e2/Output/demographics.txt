@@ -1,7 +1,9 @@
-We recruited 79 participants. 
-On the 5-trials group, there were 41 participants, aged between 17 and 38 years old (M = 25.15, SD = 5.02). Out of which, 
-24 responded Female, 
-17 responded Male, 
-On the 10-trials group, there were 38 participants, aged between 18 and 44 years old (M = 24.34, SD = 4.39). Out of which, 
-26 responded Female, 
-12 responded Male, 
+We recruited 310 participants. 
+On the 5-trials group, there were 171 participants, aged between 18 and 45 years old (M = 26.13, SD = 5.84). Out of which, 
+125 responded Female, 
+45 responded Male, 
+1 responded Rather not say, 
+On the 10-trials group, there were 139 participants, aged between 18 and 45 years old (M = 25.12, SD = 4.86). Out of which, 
+104 responded Female, 
+34 responded Male, 
+1 responded Rather not say, 
